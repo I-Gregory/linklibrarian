@@ -15,6 +15,14 @@ function App() {
   const [newNotes, setNewNotes] = useState('');
   const [newTags, setNewTags] = useState('');
 
+  const [editingLinkId, setEditingLinkId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    url: '',
+    notes: '',
+    tags: ''
+  });
+
   const loadSessionAndLinks = async () => {
     setError('');
 
@@ -145,6 +153,7 @@ function App() {
       setMessage(data.message || 'Logout successful.');
       setUser(null);
       setLinks([]);
+      setEditingLinkId(null);
     } catch (err) {
       console.error('Logout error:', err);
       setError(err.message);
@@ -185,6 +194,93 @@ function App() {
       await loadSessionAndLinks();
     } catch (err) {
       console.error('Add link error:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleStartEdit = (link) => {
+    setEditingLinkId(link.id);
+    setEditForm({
+      title: link.title || '',
+      url: link.url || '',
+      notes: link.notes || '',
+      tags: link.tags || ''
+    });
+    setError('');
+    setMessage('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLinkId(null);
+    setEditForm({
+      title: '',
+      url: '',
+      notes: '',
+      tags: ''
+    });
+  };
+
+  const handleSaveEdit = async (linkId) => {
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/links/${linkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(editForm)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update link.');
+      }
+
+      setMessage('Link updated successfully.');
+      setEditingLinkId(null);
+
+      await loadSessionAndLinks();
+    } catch (err) {
+      console.error('Edit link error:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteLink = async (linkId) => {
+    setError('');
+    setMessage('');
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this link?');
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/links/${linkId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete link.');
+      }
+
+      setMessage('Link deleted successfully.');
+
+      if (editingLinkId === linkId) {
+        setEditingLinkId(null);
+      }
+
+      await loadSessionAndLinks();
+    } catch (err) {
+      console.error('Delete link error:', err);
       setError(err.message);
     }
   };
@@ -257,14 +353,83 @@ function App() {
           ) : (
             <ul>
               {links.map((link) => (
-                <li key={link.id}>
-                  <a href={link.url} target="_blank" rel="noreferrer">
-                    {link.title}
-                  </a>
-                  {link.tags && (
-                    <span style={{ fontSize: '0.8em' }}> — {link.tags}</span>
+                <li key={link.id} style={{ marginBottom: '1rem' }}>
+                  {editingLinkId === link.id ? (
+                    <div>
+                      <div>
+                        <label>Title: </label>
+                        <input
+                          type="text"
+                          value={editForm.title}
+                          onChange={(event) =>
+                            setEditForm({ ...editForm, title: event.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label>URL: </label>
+                        <input
+                          type="text"
+                          value={editForm.url}
+                          onChange={(event) =>
+                            setEditForm({ ...editForm, url: event.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label>Notes: </label>
+                        <textarea
+                          value={editForm.notes}
+                          onChange={(event) =>
+                            setEditForm({ ...editForm, notes: event.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label>Tags: </label>
+                        <input
+                          type="text"
+                          value={editForm.tags}
+                          onChange={(event) =>
+                            setEditForm({ ...editForm, tags: event.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <button onClick={() => handleSaveEdit(link.id)}>Save</button>
+                        <button
+                          onClick={handleCancelEdit}
+                          style={{ marginLeft: '0.5rem' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <a href={link.url} target="_blank" rel="noreferrer">
+                        {link.title}
+                      </a>
+                      {link.tags && (
+                        <span style={{ fontSize: '0.8em' }}> — {link.tags}</span>
+                      )}
+                      {link.notes && <div>{link.notes}</div>}
+
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <button onClick={() => handleStartEdit(link)}>Edit</button>
+                        <button
+                          onClick={() => handleDeleteLink(link.id)}
+                          style={{ marginLeft: '0.5rem' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  {link.notes && <div>{link.notes}</div>}
                 </li>
               ))}
             </ul>
