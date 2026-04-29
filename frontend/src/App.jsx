@@ -449,7 +449,7 @@ function App() {
           )}
         </div>
       ) : (
-        <div> // Content to display when user is not logged in, showing login and registration form
+        <div> {/* Content to display when user is not logged in, showing login and registration form */}
           <p>Not logged in.</p>
 
           <form>
