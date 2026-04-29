@@ -360,8 +360,7 @@ function App() {
             </div>
           </div>
 
-          // Section displaying the list of saved links
-          <h2>Links</h2> 
+          <h2>Links</h2> {/* Section displaying the list of saved links */}
           {links.length === 0 ? (
             <p>No links yet.</p>
           ) : (
