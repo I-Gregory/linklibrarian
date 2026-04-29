@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+// Main App component for LinkLibrarian.
 function App() {
   const [user, setUser] = useState(null);
   const [links, setLinks] = useState([]);
@@ -23,6 +24,7 @@ function App() {
     tags: ''
   });
 
+  // Function to load session and links data from the backend.
   const loadSessionAndLinks = async () => {
     setError('');
 
@@ -31,7 +33,7 @@ function App() {
         credentials: 'include'
       });
 
-      if (sessionRes.status === 401) {
+      if (sessionRes.status === 401) { // Check for unauthorized status to handle not logged in case
         setUser(null);
         setLinks([]);
         return;
@@ -43,7 +45,7 @@ function App() {
 
       const sessionData = await sessionRes.json();
 
-      if (sessionData.loggedIn) {
+      if (sessionData.loggedIn) { // If logged in, set user and fetch links
         setUser(sessionData.user);
 
         const linksRes = await fetch('http://localhost:3001/api/links', {
@@ -66,6 +68,7 @@ function App() {
     }
   };
 
+  // Load session and links on component mount.
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -76,6 +79,7 @@ function App() {
     loadData();
   }, []);
 
+  // Handler for user registration.
   const handleRegister = async () => {
     setError('');
     setMessage('');
@@ -105,6 +109,7 @@ function App() {
     }
   };
 
+  // Handler for user login.
   const handleLogin = async () => {
     setError('');
     setMessage('');
@@ -134,6 +139,7 @@ function App() {
     }
   };
 
+  // Handler for user logout.
   const handleLogout = async () => {
     setError('');
     setMessage('');
@@ -160,6 +166,7 @@ function App() {
     }
   };
 
+  // Handler for adding a new link.
   const handleAddLink = async () => {
     setError('');
     setMessage('');
@@ -198,6 +205,7 @@ function App() {
     }
   };
 
+  // Handlers for editing and deleting links.
   const handleStartEdit = (link) => {
     setEditingLinkId(link.id);
     setEditForm({
@@ -210,6 +218,7 @@ function App() {
     setMessage('');
   };
 
+  // Handler to cancel editing a link.
   const handleCancelEdit = () => {
     setEditingLinkId(null);
     setEditForm({
@@ -220,6 +229,7 @@ function App() {
     });
   };
 
+  // Handler to save edited link.
   const handleSaveEdit = async (linkId) => {
     setError('');
     setMessage('');
@@ -250,6 +260,7 @@ function App() {
     }
   };
 
+  // Handler to delete a link.
   const handleDeleteLink = async (linkId) => {
     setError('');
     setMessage('');
@@ -285,10 +296,12 @@ function App() {
     }
   };
 
+  // Check for loading state before rendering the main content.
   if (loading) {
     return <div>Loading...</div>;
   }
 
+  // Main render of the app.
   return (
     <div className="App">
       <h1>LinkLibrarian</h1>
@@ -296,7 +309,7 @@ function App() {
       {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
       {message && <p style={{ color: 'green' }}>{message}</p>}
 
-      {user ? (
+      {user ? ( // If user is logged in, show links and user info. Otherwise, show login/register form.
         <div>
           <p>Logged in as: {user.email}</p>
           <button onClick={handleLogout}>Logout</button>
@@ -347,7 +360,8 @@ function App() {
             </div>
           </div>
 
-          <h2>Links</h2>
+          // Section displaying the list of saved links
+          <h2>Links</h2> 
           {links.length === 0 ? (
             <p>No links yet.</p>
           ) : (
@@ -436,7 +450,7 @@ function App() {
           )}
         </div>
       ) : (
-        <div>
+        <div> // Content to display when user is not logged in, showing login and registration form
           <p>Not logged in.</p>
 
           <form>
