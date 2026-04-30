@@ -46,6 +46,9 @@ app.use(session({
   }
 }));
 
+        // Begin of API routes - Learning Note: Every route first tests for a failure case because a failure response is considered the backup response that should happen if the first functionality of the route fails to operate; The fail case holds the relational link of '0' to '1' as a precursor waiting for any case that the first response fails. 
+        // (The interesting AI suggestion completion):This is a common pattern in API development to ensure that error handling is in place before executing the main logic of the route. By checking for failure conditions early, we can return appropriate error responses and prevent unnecessary processing if the request is invalid or if there are issues with authentication, database queries, etc. This approach helps improve the robustness and reliability of the API.
+
 // Basic route to check if server is running
 app.get('/', (req, res) => {
   res.send('LinkLibrarian backend is running.');
@@ -222,7 +225,8 @@ app.post('/api/register', async (req, res) => {
       [email]
     );
 
-    if (existingUsers.length > 0) {
+    // Example description of error case first-checking: This component checks if a user with the provided email already exists by querying the database of users. If a match is found to an email already registered, it returns a 409 Conflict response with a message indicating that an account with that email already exists. This prevents duplicate accounts from being created with the same email address.
+    if (existingUsers.length > 0) { 
       return res.status(409).json({
         message: 'An account with that email already exists.'
       });
