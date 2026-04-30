@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Main App component for LinkLibrarian.
 function App() {
@@ -22,6 +22,19 @@ function App() {
     url: '',
     notes: '',
     tags: ''
+  });
+
+  // Function to filter links based on the tag filter input.
+  const [tagFilter, setTagFilter] = useState('');
+
+  const filteredLinks = links.filter((link) => {
+    if (!tagFilter.trim()) {
+      return true;
+    }
+
+    return (link.tags || '')
+      .toLowerCase()
+      .includes(tagFilter.toLowerCase());
   });
 
   // Function to load session and links data from the backend.
@@ -160,6 +173,7 @@ function App() {
       setUser(null);
       setLinks([]);
       setEditingLinkId(null);
+      setTagFilter('');
     } catch (err) {
       console.error('Logout error:', err);
       setError(err.message);
@@ -218,7 +232,7 @@ function App() {
     setMessage('');
   };
 
-  // Handler to cancel editing a link.
+  // Handler to cancel editing a link and reset the edit form.
   const handleCancelEdit = () => {
     setEditingLinkId(null);
     setEditForm({
@@ -229,7 +243,7 @@ function App() {
     });
   };
 
-  // Handler to save edited link.
+  // Handler to save the edited link details and update it in the backend.
   const handleSaveEdit = async (linkId) => {
     setError('');
     setMessage('');
@@ -260,7 +274,7 @@ function App() {
     }
   };
 
-  // Handler to delete a link.
+  // Handler to delete a link after confirming with the user and updating the backend.
   const handleDeleteLink = async (linkId) => {
     setError('');
     setMessage('');
@@ -301,7 +315,7 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  // Main render of the app.
+  // Main render of the app. Displays user info, link management interface, and handles login/register forms based on authentication state.
   return (
     <div className="App">
       <h1>LinkLibrarian</h1>
@@ -360,12 +374,30 @@ function App() {
             </div>
           </div>
 
-          <h2>Links</h2> {/* Section displaying the list of saved links */}
-          {links.length === 0 ? (
-            <p>No links yet.</p>
+          <h2>Filter by Tag</h2>
+          <div>
+            <label htmlFor="tagFilter">Tag Filter: </label>
+            <input
+              id="tagFilter"
+              type="text"
+              value={tagFilter}
+              onChange={(event) => setTagFilter(event.target.value)}
+              placeholder="Type a tag keyword"
+            />
+            <button
+              onClick={() => setTagFilter('')}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              Clear Filter
+            </button>
+          </div>
+
+          <h2>Links</h2> {/* Section displaying the list of saved links. If no links match the filter, display a "No matching links found." message. */}
+          {filteredLinks.length === 0 ? (
+            <p>No matching links found.</p>
           ) : (
             <ul>
-              {links.map((link) => (
+              {filteredLinks.map((link) => (
                 <li key={link.id} style={{ marginBottom: '1rem' }}>
                   {editingLinkId === link.id ? (
                     <div>
@@ -375,7 +407,10 @@ function App() {
                           type="text"
                           value={editForm.title}
                           onChange={(event) =>
-                            setEditForm({ ...editForm, title: event.target.value })
+                            setEditForm({
+                              ...editForm,
+                              title: event.target.value
+                            })
                           }
                         />
                       </div>
@@ -386,7 +421,10 @@ function App() {
                           type="text"
                           value={editForm.url}
                           onChange={(event) =>
-                            setEditForm({ ...editForm, url: event.target.value })
+                            setEditForm({
+                              ...editForm,
+                              url: event.target.value
+                            })
                           }
                         />
                       </div>
@@ -396,7 +434,10 @@ function App() {
                         <textarea
                           value={editForm.notes}
                           onChange={(event) =>
-                            setEditForm({ ...editForm, notes: event.target.value })
+                            setEditForm({
+                              ...editForm,
+                              notes: event.target.value
+                            })
                           }
                         />
                       </div>
@@ -407,7 +448,10 @@ function App() {
                           type="text"
                           value={editForm.tags}
                           onChange={(event) =>
-                            setEditForm({ ...editForm, tags: event.target.value })
+                            setEditForm({
+                              ...editForm,
+                              tags: event.target.value
+                            })
                           }
                         />
                       </div>
