@@ -21,7 +21,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 const MySQLStore = MySQLStoreFactory(session); // Create a MySQL session store using the connection pool
 const sessionStore = new MySQLStore({}, pool); // Use the connection pool for session storage
@@ -357,5 +357,5 @@ app.get('/api/session', (req, res) => {
 
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
