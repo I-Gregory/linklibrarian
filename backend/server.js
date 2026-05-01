@@ -26,8 +26,19 @@ const PORT = process.env.PORT || 8080;
 const MySQLStore = MySQLStoreFactory(session); // Create a MySQL session store using the connection pool
 const sessionStore = new MySQLStore({}, pool); // Use the connection pool for session storage
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://linklibrarian-frontend-production.up.railway.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
