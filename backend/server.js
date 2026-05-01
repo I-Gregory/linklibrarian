@@ -27,7 +27,7 @@ const MySQLStore = MySQLStoreFactory(session); // Create a MySQL session store u
 const sessionStore = new MySQLStore({}, pool); // Use the connection pool for session storage
 
 app.use(cors({
-  origin: 'http://localhost:5173/',
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 
