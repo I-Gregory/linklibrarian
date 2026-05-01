@@ -49,6 +49,10 @@ app.use(session({
         // Begin of API routes - Learning Note: Every route first tests for a failure case because a failure response is considered the backup response that should happen if the first functionality of the route fails to operate; The fail case holds the relational link of '0' to '1' as a precursor waiting for any case that the first response fails. 
         // (The interesting AI suggestion completion):This is a common pattern in API development to ensure that error handling is in place before executing the main logic of the route. By checking for failure conditions early, we can return appropriate error responses and prevent unnecessary processing if the request is invalid or if there are issues with authentication, database queries, etc. This approach helps improve the robustness and reliability of the API.
 
+app.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
 // Basic route to check if server is running
 app.get('/', (req, res) => {
   res.send('LinkLibrarian backend is running.');
