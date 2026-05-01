@@ -24,6 +24,8 @@ function App() {
     tags: ''
   });
 
+  const API_BASE_URL = 'https://your-backend-domain.up.railway.app';
+
   // Function to filter links based on the tag filter input.
   const [tagFilter, setTagFilter] = useState('');
 
@@ -42,7 +44,7 @@ function App() {
     setError('');
 
     try {
-      const sessionRes = await fetch('http://localhost:3001/api/session', {
+      const sessionRes = await fetch('http://${API_BASE_URL}/api/session', {
         credentials: 'include'
       });
 
@@ -61,7 +63,7 @@ function App() {
       if (sessionData.loggedIn) { // If logged in, set user and fetch links
         setUser(sessionData.user);
 
-        const linksRes = await fetch('http://localhost:3001/api/links', {
+        const linksRes = await fetch('http://${API_BASE_URL}/api/links', {
           credentials: 'include'
         });
 
@@ -98,7 +100,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const response = await fetch('http://${API_BASE_URL}/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -128,7 +130,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const response = await fetch('http://${API_BASE_URL}/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -158,7 +160,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/logout', {
+      const response = await fetch('http://${API_BASE_URL}/api/logout', {
         method: 'POST',
         credentials: 'include'
       });
@@ -186,7 +188,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/links', {
+      const response = await fetch('http://${API_BASE_URL}/api/links', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -249,7 +251,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch(`http://localhost:3001/api/links/${linkId}`, {
+      const response = await fetch(`http://${API_BASE_URL}/api/links/${linkId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -286,7 +288,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/links/${linkId}`, {
+      const response = await fetch(`http://${API_BASE_URL}/api/links/${linkId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
