@@ -24,7 +24,7 @@ function App() {
     tags: ''
   });
 
-  const API_BASE_URL = 'https://linklibrarian-production.up.railway.app'; // Base URL for the deployed backend API. Change this to 'http://localhost:3001' for local development.
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
   // Function to filter links based on the tag filter input.
   const [tagFilter, setTagFilter] = useState('');
