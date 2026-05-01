@@ -1,5 +1,3 @@
-USE linklibrarian_db;
-
 DROP TABLE IF EXISTS links;
 DROP TABLE IF EXISTS users;
 
