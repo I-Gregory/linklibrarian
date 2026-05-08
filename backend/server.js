@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const MySQLStoreFactory = require('express-mysql-session');
+const path = require('path'); // Added for serving static files (like uploaded images)
+const multer = require('multer'); // Multer is a middleware for handling multipart/form-data, which is primarily used for uploading files. In this case, it will be used to handle image uploads for the links.
 const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const pool = require('./db');
@@ -43,6 +45,42 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files from the 'uploads' directory - the directory that will hold the images uploaded by users for their links. This allows the frontend to access these images via URLs that point to this directory.
+
+// Configure storage destination and filename generation for uploaded files
+const storage = multer.diskStorage({
+  // Step 1: Define where uploaded files will be stored (in the 'uploads' directory)
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads'));
+  },
+  // Step 2: Generate unique filenames to avoid collisions
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+// Step 3: Create a filter function to validate that only image files are accepted
+const imageFileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+  // Check if the uploaded file's MIME type is in the allowedTypes list
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true); // Accept the file
+  } else {
+    cb(new Error('Only JPG, PNG, and GIF image files are allowed.')); // Reject the file
+  }
+};
+
+// Step 4: Configure multer middleware with storage location, file validation, and size limits
+const upload = multer({
+  storage, // Use the storage configuration defined above
+  fileFilter: imageFileFilter, // Apply the image type validation filter
+  limits: {
+    fileSize: 5 * 1024 * 1024 // Limit file size to 5MB
+  }
+});
+
 
 app.use(session({
   key: 'linklibrarian.sid',
@@ -91,7 +129,7 @@ app.get('/api/links', requireLogin, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `
-      SELECT id, user_id, title, url, notes, tags, created_at, updated_at
+      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
       FROM links
       WHERE user_id = ?
       ORDER BY created_at DESC
@@ -130,7 +168,7 @@ app.post('/api/links', requireLogin, async (req, res) => {
 
     const [rows] = await pool.query(
       `
-      SELECT id, user_id, title, url, notes, tags, created_at, updated_at
+      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
       FROM links
       WHERE id = ?
       `,
@@ -142,6 +180,47 @@ app.post('/api/links', requireLogin, async (req, res) => {
     console.error('Failed to create link:', error);
     res.status(500).json({
       message: 'Failed to create link.',
+      error: error.message
+    });
+  }
+});
+
+// Post route to upload an image for a link
+app.post('/api/links/:id/image', requireLogin, upload.single('image'), async (req, res) => {
+  try {
+    const linkId = Number(req.params.id);
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: 'Please select an image file.'
+      });
+    }
+
+    const imagePath = `/uploads/${req.file.filename}`;
+
+    const [result] = await pool.query(
+      `
+      UPDATE links
+      SET image_path = ?
+      WHERE id = ? AND user_id = ?
+      `,
+      [imagePath, linkId, req.session.user.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: 'Link not found.'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Image uploaded successfully.',
+      imagePath
+    });
+  } catch (error) {
+    console.error('Image upload failed:', error);
+    res.status(500).json({
+      message: 'Image upload failed.',
       error: error.message
     });
   }
@@ -176,7 +255,7 @@ app.put('/api/links/:id', requireLogin, async (req, res) => {
 
     const [rows] = await pool.query(
       `
-      SELECT id, user_id, title, url, notes, tags, created_at, updated_at
+      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
       FROM links
       WHERE id = ?
       `,
