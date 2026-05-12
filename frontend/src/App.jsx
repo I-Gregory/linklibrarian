@@ -15,6 +15,8 @@ function App() {
   const [newUrl, setNewUrl] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newTags, setNewTags] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null); // State to hold the selected image file for upload.
+  const [uploadingLinkId, setUploadingLinkId] = useState(null); // State to track which link is currently having an image uploaded (used to show loading state for that specific link).
 
   const [editingLinkId, setEditingLinkId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -312,6 +314,50 @@ function App() {
     }
   };
 
+  // Handler to upload an image for a specific link.
+  const handleImageUpload = async (linkId) => {
+    setError('');
+    setMessage('');
+
+    if (!selectedImageFile) {
+      setError('Please select an image file first.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', selectedImageFile);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/links/${linkId}/image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Image upload failed.');
+      }
+
+      setMessage('Image uploaded successfully.');
+      setSelectedImageFile(null);
+      setUploadingLinkId(null);
+      await loadSessionAndLinks();
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError(err.message);
+    }
+  };
+
+  /*--------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
+  BEGIN HTML RENDERING CODE
+  ----------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------*/
+
   // Check for loading state before rendering the main content.
   if (loading) {
     return <div>Loading...</div>;
@@ -477,6 +523,55 @@ function App() {
                         <span style={{ fontSize: '0.8em' }}> — {link.tags}</span>
                       )}
                       {link.notes && <div>{link.notes}</div>}
+
+                      {/* Display image thumbnail if one exists for this link */}
+                      {link.image_path && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <img
+                            src={`${API_BASE_URL}${link.image_path}`}
+                            alt={`Image for ${link.title}`}
+                            style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'cover' }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Image upload controls */}
+                      <div style={{ marginTop: '0.5rem' }}>
+                        {uploadingLinkId === link.id ? (
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/gif"
+                              onChange={(event) => setSelectedImageFile(event.target.files[0])}
+                            />
+                            <button
+                              onClick={() => handleImageUpload(link.id)}
+                              style={{ marginLeft: '0.5rem' }}
+                            >
+                              Upload
+                            </button>
+                            <button
+                              onClick={() => {
+                                setUploadingLinkId(null);
+                                setSelectedImageFile(null);
+                              }}
+                              style={{ marginLeft: '0.5rem' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setUploadingLinkId(link.id);
+                              setSelectedImageFile(null);
+                            }}
+                            style={{ marginTop: '0.25rem' }}
+                          >
+                            {link.image_path ? 'Change Image' : 'Add Image'}
+                          </button>
+                        )}
+                      </div>
 
                       <div style={{ marginTop: '0.5rem' }}>
                         <button onClick={() => handleStartEdit(link)}>Edit</button>
