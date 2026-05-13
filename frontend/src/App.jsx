@@ -371,7 +371,7 @@ function App() {
       {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
       {message && <p style={{ color: 'green' }}>{message}</p>}
 
-      {user ? ( // If user is logged in, show links and user info. Otherwise, show login/register form.
+      {user ? ( // If user is logged in, show links and user page content. Otherwise, show login/register form.
         <div>
           <p>Logged in as: {user.email}</p>
           <button onClick={handleLogout}>Logout</button>
