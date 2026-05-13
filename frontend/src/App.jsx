@@ -358,273 +358,234 @@ function App() {
   ----------------------------------------------------------------------------------------------------
   --------------------------------------------------------------------------------------------------*/
 
-  // Check for loading state before rendering the main content.
-  if (loading) {
-    return <div>Loading...</div>;
+    // Show loading state while fetching session and links data.
+    if (loading) {
+    return <div className="app-loading">Loading…</div>;
   }
 
-  // Main render of the app. Displays user info, link management interface, and handles login/register forms based on authentication state.
   return (
     <div className="App">
-      <h1>LinkLibrarian</h1>
+      {/* ── TOP NAV BAR ── */}
+      <header className="app-header">
+        <h1>LinkLibrarian</h1>
+        <div className="header-center">
+          {error   && <span className="app-error">Error: {error}</span>}
+          {message && <span className="app-message">{message}</span>}
+        </div>
+        <div className="header-right">
+          {user && (
+            <>
+              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>
+                {user.email}
+              </span>
+              <button onClick={handleLogout}>Logout</button>
+            </>
+          )}
+        </div>
+      </header>
 
-      {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {user ? ( // If user is logged in, show the main app interface; otherwise, show login/register form.
+        <div className="app-body">
 
-      {user ? ( // If user is logged in, show links and user page content. Otherwise, show login/register form.
-        <div>
-          <p>Logged in as: {user.email}</p>
-          <button onClick={handleLogout}>Logout</button>
-
-          <h2>Add Link</h2>
-          <div>
-            <div>
-              <label htmlFor="newTitle">Title: </label>
+          {/* ── ADD LINK SECTION ── */}
+          <section className="add-link-section">
+            <h2>Add Link</h2>
+            <div className="add-link-form">
+              <label htmlFor="newTitle">Title:</label>
               <input
                 id="newTitle"
                 type="text"
                 value={newTitle}
-                onChange={(event) => setNewTitle(event.target.value)}
+                onChange={(e) => setNewTitle(e.target.value)}
               />
-            </div>
 
-            <div>
-              <label htmlFor="newUrl">URL: </label>
+              <label htmlFor="newUrl">URL:</label>
               <input
                 id="newUrl"
                 type="text"
                 value={newUrl}
-                onChange={(event) => setNewUrl(event.target.value)}
+                onChange={(e) => setNewUrl(e.target.value)}
               />
-            </div>
 
-            <div>
-              <label htmlFor="newNotes">Notes: </label>
+              <label htmlFor="newNotes">Notes:</label>
               <textarea
                 id="newNotes"
                 value={newNotes}
-                onChange={(event) => setNewNotes(event.target.value)}
+                onChange={(e) => setNewNotes(e.target.value)}
               />
-            </div>
 
-            <div>
-              <label htmlFor="newTags">Tags: </label>
+              <label htmlFor="newTags">Tags:</label>
               <input
                 id="newTags"
                 type="text"
                 value={newTags}
-                onChange={(event) => setNewTags(event.target.value)}
+                onChange={(e) => setNewTags(e.target.value)}
               />
+
+              <div className="add-link-actions">
+                <button onClick={handleAddLink}>Add Link</button>
+              </div>
             </div>
+          </section>
 
-            <div style={{ marginTop: '1rem' }}>
-              <button onClick={handleAddLink}>Add Link</button>
+          {/* ── LINKS SECTION ── */}
+          <section className="links-section">
+            <div className="links-toolbar">
+              <span className="toolbar-title">Links</span>
+              <div className="toolbar-divider" />
+              <span className="filter-label">Filter by Tag:</span>
+              <input
+                className="filter-input"
+                id="tagFilter"
+                type="text"
+                value={tagFilter}
+                onChange={(e) => setTagFilter(e.target.value)}
+                placeholder="Type a tag keyword"
+              />
+              <button className="clear-btn" onClick={() => setTagFilter('')}>
+                Clear
+              </button>
             </div>
-          </div>
+            <div className="links-divider" />
 
-          <h2>Filter by Tag</h2>
-          <div>
-            <label htmlFor="tagFilter">Tag Filter: </label>
-            <input
-              id="tagFilter"
-              type="text"
-              value={tagFilter}
-              onChange={(event) => setTagFilter(event.target.value)}
-              placeholder="Type a tag keyword"
-            />
-            <button
-              onClick={() => setTagFilter('')}
-              style={{ marginLeft: '0.5rem' }}
-            >
-              Clear Filter
-            </button>
-          </div>
+            {filteredLinks.length === 0 ? (
+              <div className="links-grid">
+                <p className="links-empty">No matching links found.</p>
+              </div>
+            ) : (
+              <div className="links-grid">
+                {filteredLinks.map((link) => (
+                  <div className="link-card" key={link.id}>
 
-          <h2>Links</h2> {/* Section displaying the list of saved links. If no links match the filter, display a "No matching links found." message. */}
-          {filteredLinks.length === 0 ? (
-            <p>No matching links found.</p>
-          ) : (
-            <ul>
-              {filteredLinks.map((link) => (
-                <li key={link.id} style={{ marginBottom: '1rem' }}>
-                  {editingLinkId === link.id ? (
-                    <div>
-                      <div>
-                        <label>Title: </label>
-                        <input
-                          type="text"
-                          value={editForm.title}
-                          onChange={(event) =>
-                            setEditForm({
-                              ...editForm,
-                              title: event.target.value
-                            })
-                          }
-                        />
+                    {/* Image or placeholder */}
+                    {link.image_path ? (
+                      <img
+                        className="link-card-image"
+                        src={`${API_BASE_URL}${link.image_path}`}
+                        alt={`Image for ${link.title}`}
+                      />
+                    ) : (
+                      <div className="link-card-image-placeholder">
+                        No image uploaded
                       </div>
+                    )}
 
-                      <div>
-                        <label>URL: </label>
-                        <input
-                          type="text"
-                          value={editForm.url}
-                          onChange={(event) =>
-                            setEditForm({
-                              ...editForm,
-                              url: event.target.value
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div>
-                        <label>Notes: </label>
-                        <textarea
-                          value={editForm.notes}
-                          onChange={(event) =>
-                            setEditForm({
-                              ...editForm,
-                              notes: event.target.value
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div>
-                        <label>Tags: </label>
-                        <input
-                          type="text"
-                          value={editForm.tags}
-                          onChange={(event) =>
-                            setEditForm({
-                              ...editForm,
-                              tags: event.target.value
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div style={{ marginTop: '0.5rem' }}>
-                        <button onClick={() => handleSaveEdit(link.id)}>Save</button>
-                        <button
-                          onClick={handleCancelEdit}
-                          style={{ marginLeft: '0.5rem' }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <a href={link.url} target="_blank" rel="noreferrer">
-                        {link.title}
-                      </a>
-                      {link.tags && (
-                        <span style={{ fontSize: '0.8em' }}> — {link.tags}</span>
-                      )}
-                      {link.notes && <div>{link.notes}</div>}
-
-                      {/* Display image thumbnail if one exists for this link */}
-                      {link.image_path && (
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <img
-                            src={`${API_BASE_URL}${link.image_path}`}
-                            alt={`Image for ${link.title}`}
-                            style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'cover' }}
+                    {editingLinkId === link.id ? (
+                      /* ── EDIT MODE ── */
+                      <div className="link-card-edit">
+                        <div>
+                          <label>Title:</label>
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                           />
                         </div>
-                      )}
+                        <div>
+                          <label>URL:</label>
+                          <input
+                            type="text"
+                            value={editForm.url}
+                            onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label>Notes:</label>
+                          <textarea
+                            value={editForm.notes}
+                            onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label>Tags:</label>
+                          <input
+                            type="text"
+                            value={editForm.tags}
+                            onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                          />
+                        </div>
+                        <div className="link-card-edit-actions">
+                          <button onClick={() => handleSaveEdit(link.id)}>Save</button>
+                          <button onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* ── VIEW MODE ── */
+                      <>
+                        {/* Upload / Change Image controls */}
+                        <div className="link-card-actions">
+                          {uploadingLinkId === link.id ? (
+                            <div className="link-card-upload">
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/gif"
+                                onChange={(e) => setSelectedImageFile(e.target.files[0])}
+                              />
+                              <div className="upload-btns">
+                                <button onClick={() => handleImageUpload(link.id)}>Upload</button>
+                                <button onClick={() => { setUploadingLinkId(null); setSelectedImageFile(null); }}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button onClick={() => { setUploadingLinkId(link.id); setSelectedImageFile(null); }}>
+                              {link.image_path ? 'Change Image' : 'Upload Image'}
+                            </button>
+                          )}
+                          <button onClick={() => handleStartEdit(link)}>Edit</button>
+                          <button onClick={() => handleDeleteLink(link.id)}>Delete</button>
+                        </div>
 
-                      {/* Image upload controls */}
-                      <div style={{ marginTop: '0.5rem' }}>
-                        {uploadingLinkId === link.id ? (
-                          <div>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/gif"
-                              onChange={(event) => setSelectedImageFile(event.target.files[0])}
-                            />
-                            <button
-                              onClick={() => handleImageUpload(link.id)}
-                              style={{ marginLeft: '0.5rem' }}
-                            >
-                              Upload
-                            </button>
-                            <button
-                              onClick={() => {
-                                setUploadingLinkId(null);
-                                setSelectedImageFile(null);
-                              }}
-                              style={{ marginLeft: '0.5rem' }}
-                            >
-                              Cancel
-                            </button>
+                        {/* Title + tags + notes */}
+                        <div className="link-card-info">
+                          <div className="link-card-title-row">
+                            <a href={link.url} target="_blank" rel="noreferrer">
+                              {link.title}
+                            </a>
+                            {link.tags && (
+                              <span className="link-card-tags">— {link.tags}</span>
+                            )}
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setUploadingLinkId(link.id);
-                              setSelectedImageFile(null);
-                            }}
-                            style={{ marginTop: '0.25rem' }}
-                          >
-                            {link.image_path ? 'Change Image' : 'Add Image'}
-                          </button>
-                        )}
-                      </div>
-
-                      <div style={{ marginTop: '0.5rem' }}>
-                        <button onClick={() => handleStartEdit(link)}>Edit</button>
-                        <button
-                          onClick={() => handleDeleteLink(link.id)}
-                          style={{ marginLeft: '0.5rem' }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+                          {link.notes && (
+                            <div className="link-card-notes">{link.notes}</div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      ) : (
-        <div> {/* Content to display when user is not logged in, showing login and registration form */}
-          <p>Not logged in.</p>
 
-          <form>
+      ) : (
+        /* ── LOGIN / REGISTER ── */
+        <div className="auth-page">
+          <h2>Sign in to LinkLibrarian</h2>
+          <form className="auth-form">
             <div>
-              <label htmlFor="email">Email: </label>
+              <label htmlFor="email">Email:</label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-
             <div>
-              <label htmlFor="password">Password: </label>
+              <label htmlFor="password">Password:</label>
               <input
                 id="password"
                 type="password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
-            <div style={{ marginTop: '1rem' }}>
-              <button type="button" onClick={handleRegister}>
-                Register
-              </button>
-              <button
-                type="button"
-                onClick={handleLogin}
-                style={{ marginLeft: '0.5rem' }}
-              >
-                Login
-              </button>
+            <div className="auth-actions">
+              <button type="button" onClick={handleRegister}>Register</button>
+              <button type="button" onClick={handleLogin}>Login</button>
             </div>
           </form>
         </div>
