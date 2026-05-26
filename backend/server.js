@@ -1,3 +1,5 @@
+    // server.js - This file sets up the Express server for the LinkLibrarian application, handling API routes for user authentication and link management, as well as image uploads for links. It uses MySQL for data storage and express-session for session management. The server also includes CORS configuration to allow requests from the frontend application, and it serves uploaded images from a designated directory. The API routes include error handling to ensure that appropriate responses are sent back to the client in case of failures, such as invalid input or database errors. Overall, this file is the central hub for the backend functionality of the LinkLibrarian application.
+// Import necessary modules and configure environment variables
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
@@ -8,9 +10,9 @@ const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const pool = require('./db');
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env file
 
-const app = express();
+const app = express(); // Create an instance of the Express application
 
 // Middleware to check if user is logged in before allowing access to certain routes
 function requireLogin(req, res, next) {
