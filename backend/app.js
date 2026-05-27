@@ -25,8 +25,25 @@ function requireLogin(req, res, next) {
   next();
 }
 
-const MySQLStore = MySQLStoreFactory(session); // Create a MySQL session store using the connection pool
-const sessionStore = new MySQLStore({}, pool); // Use the connection pool for session storage
+let sessionConfig = {
+  key: 'linklibrarian.sid',
+  secret: process.env.SESSION_SECRET || 'test-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24
+  }
+};
+
+if (process.env.NODE_ENV !== 'test') {
+  const MySQLStore = MySQLStoreFactory(session);
+  const sessionStore = new MySQLStore({}, pool);
+  sessionConfig.store = sessionStore;
+}
+
+app.use(session(sessionConfig));
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -81,19 +98,6 @@ const upload = multer({
   }
 });
 
-
-app.use(session({
-  key: 'linklibrarian.sid',
-  secret: process.env.SESSION_SECRET,
-  store: sessionStore,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: false,
-    maxAge: 1000 * 60 * 60 * 24
-  }
-}));
 
         // Begin of API routes - Learning Note: Every route first tests for a failure case because a failure response is considered the backup response that should happen if the first functionality of the route fails to operate; The fail case holds the relational link of '0' to '1' as a precursor waiting for any case that the first response fails. 
         // (The interesting AI suggestion completion):This is a common pattern in API development to ensure that error handling is in place before executing the main logic of the route. By checking for failure conditions early, we can return appropriate error responses and prevent unnecessary processing if the request is invalid or if there are issues with authentication, database queries, etc. This approach helps improve the robustness and reliability of the API.
