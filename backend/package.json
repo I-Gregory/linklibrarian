@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "migrate": "node ../database/migrate.js"
+    "migrate": "node ../database/migrate.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -21,5 +24,13 @@
     "express-session": "^1.19.0",
     "multer": "^2.1.1",
     "mysql2": "^3.22.2"
+  },
+  "jest": {
+  "testEnvironment": "node",
+  "testMatch": ["**/*.test.js"]
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }
