@@ -2,22 +2,28 @@
 
 LinkLibrarian is a full-stack web app for registering users, logging in, and saving, editing, filtering, and deleting personal links.
 
-Example comment of change.
-
 ## Tech Stack
 
 - Frontend: React + Vite
-- Backend: Node.js + Express
+- Backend: Node.js + Express (with multer for image uploads)
 - Database: MySQL
 - Sessions: express-session + MySQL session store
 - Hosting: Railway
+- Testing: Jest + Supertest (backend tests)
 
 ## Project Structure
 
 ```text
 project-root/
   backend/
+    coverage/
+    tests/
+    uploads/
   frontend/
+    public/
+    src/
+  database/
+  .github/workflows
 ```
 
 - `backend/` contains the Express server, session handling, and MySQL connection.
@@ -29,6 +35,7 @@ project-root/
 - Session-based authentication
 - Create, read, update, and delete links
 - Tag filtering
+- Upload and display an image for each link
 - Local development support
 - Production deployment on Railway
 
@@ -177,11 +184,13 @@ Because Vite frontend variables are baked into the build, changing this value re
 - Start local frontend
 - Open `http://localhost:5173`
 - Confirm changes affect local MySQL only
+- Upload an image for a link and verify it appears in the UI.
 
 ### Production
 - Open `https://linklibrarian-frontend-production.up.railway.app`
 - Register/login successfully
 - Confirm CRUD actions affect Railway MySQL
+- Upload an image for a link and verify it appears in the UI.
 
 ## Troubleshooting
 
