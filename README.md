@@ -1,6 +1,6 @@
 # LinkLibrarian
 
-LinkLibrarian is a full-stack web app for registering users, logging in, and saving, editing, filtering, and deleting personal links.
+LinkLibrarian is a full-stack web app for registering users, logging in, and saving, editing, filtering, and deleting personal links. It includes an image upload functionality to customize a user's saved links and incorporates two workflows for automatic linting and several basic software tests.
 
 ## Tech Stack
 
@@ -23,11 +23,18 @@ project-root/
     public/
     src/
   database/
-  .github/workflows
+  .github/workflows/
 ```
 
 - `backend/` contains the Express server, session handling, and MySQL connection.
+  - `backend/coverage/` contains the coverage output reports from the software tests.
+  - `backend/tests/` contains the software test files.
+  - `backend/uploads/` holds the uploaded images for the image upload feature.
 - `frontend/` contains the Vite + React client.
+  - `frontend/public/` holds the .svg template images for Vite & React.
+  - `frontend/src/` contains the .css & .jsx files for app stylization and the main function description.
+- `database/` contains the database configuration files.
+- `.github/workflows/` contains the .yml configuration files for the workflows used in testing and automatic linting of the app.
 
 ## Features
 
