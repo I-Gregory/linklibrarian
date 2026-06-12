@@ -29,7 +29,7 @@ project-root/
 - `backend/` contains the Express server, session handling, and MySQL connection.
   - `backend/coverage/` contains the coverage output reports from the software tests.
   - `backend/tests/` contains the software test files.
-  - `backend/uploads/` holds the uploaded images for the image upload feature.
+  - `backend/uploads/` is created automatically when you upload an image. It stores user-uploaded link images, which are served at `/uploads/<filename>`.
 - `frontend/` contains the Vite + React client.
   - `frontend/public/` holds the .svg template images for Vite & React.
   - `frontend/src/` contains the .css & .jsx files for app stylization and the main function description.
