@@ -9,6 +9,12 @@ const multer = require('multer'); // Multer is a middleware for handling multipa
 const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 const pool = require('./db');
+const {
+  getLinksForUser,
+  createLink,
+  updateLink,
+  deleteLink,
+} = require('./mongoLinks');
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -131,22 +137,28 @@ app.get('/api/test-db', async (req, res) => {
 // Get route to fetch all links for the logged-in user
 app.get('/api/links', requireLogin, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `
-      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
-      FROM links
-      WHERE user_id = ?
-      ORDER BY created_at DESC
-      `,
-      [req.session.user.id]
-    );
+    const userId = req.session.user.id;
+    const links = await getLinksForUser(userId);
 
-    res.json(rows);
+    const formatted = links.map(link => ({
+      id: link._id.toString(),
+      user_id: link.userId,
+      title: link.title,
+      url: link.url,
+      notes: link.notes,
+      // convert tags array back to string if frontend expects a string
+      tags: Array.isArray(link.tags) ? link.tags.join(', ') : (link.tags || ''),
+      image_path: link.imageUrl || '',
+      created_at: link.createdAt,
+      updated_at: link.updatedAt,
+    }));
+
+    res.json(formatted);
   } catch (error) {
-    console.error('Failed to fetch links:', error);
+    console.error('Failed to fetch links (Mongo):', error);
     res.status(500).json({
       message: 'Failed to fetch links.',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -158,120 +170,81 @@ app.post('/api/links', requireLogin, async (req, res) => {
 
     if (!title || !url) {
       return res.status(400).json({
-        message: 'Title and url are required.'
+        message: 'Title and url are required.',
       });
     }
 
-    const [result] = await pool.query(
-      `
-      INSERT INTO links (user_id, title, url, notes, tags)
-      VALUES (?, ?, ?, ?, ?)
-      `,
-      [req.session.user.id, title, url, notes || '', tags || '']
-    );
+    const userId = req.session.user.id;
 
-    const [rows] = await pool.query(
-      `
-      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
-      FROM links
-      WHERE id = ?
-      `,
-      [result.insertId]
-    );
+    const newLink = await createLink({
+      userId,
+      title,
+      url,
+      notes,
+      // if tags comes in as a comma-separated string, split it:
+      tags: Array.isArray(tags)
+        ? tags
+        : typeof tags === 'string' && tags.trim() !== ''
+        ? tags.split(',').map(t => t.trim())
+        : [],
+      imageUrl: '', // image can be added later
+    });
 
-    res.status(201).json(rows[0]);
+    res.status(201).json(newLink);
   } catch (error) {
-    console.error('Failed to create link:', error);
+    console.error('Failed to create link (Mongo):', error);
     res.status(500).json({
       message: 'Failed to create link.',
-      error: error.message
+      error: error.message,
     });
   }
 });
 
 // Post route to upload an image for a link
 app.post('/api/links/:id/image', requireLogin, upload.single('image'), async (req, res) => {
-  try {
-    const linkId = Number(req.params.id);
-
-    if (!req.file) {
-      return res.status(400).json({
-        message: 'Please select an image file.'
-      });
-    }
-
-    const imagePath = `/uploads/${req.file.filename}`;
-
-    const [result] = await pool.query(
-      `
-      UPDATE links
-      SET image_path = ?
-      WHERE id = ? AND user_id = ?
-      `,
-      [imagePath, linkId, req.session.user.id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: 'Link not found.'
-      });
-    }
-
-    res.status(200).json({
-      message: 'Image uploaded successfully.',
-      imagePath
-    });
-  } catch (error) {
-    console.error('Image upload failed:', error);
-    res.status(500).json({
-      message: 'Image upload failed.',
-      error: error.message
-    });
-  }
+  return res.status(501).json({
+    message: 'Image upload with MongoDB is not implemented yet in this version.',
+  });
 });
 
 // Put route to update an existing link
 app.put('/api/links/:id', requireLogin, async (req, res) => {
   try {
-    const linkId = Number(req.params.id);
+    const linkId = req.params.id; // Mongo _id is a string
     const { title, url, notes, tags } = req.body;
 
     if (!title || !url) {
       return res.status(400).json({
-        message: 'Title and url are required.'
+        message: 'Title and url are required.',
       });
     }
 
-    const [result] = await pool.query(
-      `
-      UPDATE links
-      SET title = ?, url = ?, notes = ?, tags = ?
-      WHERE id = ? AND user_id = ?
-      `,
-      [title, url, notes || '', tags || '', linkId, req.session.user.id]
-    );
+    const userId = req.session.user.id;
 
-    if (result.affectedRows === 0) {
+    const updatedLink = await updateLink(linkId, userId, {
+      title,
+      url,
+      notes,
+      tags: Array.isArray(tags)
+        ? tags
+        : typeof tags === 'string' && tags.trim() !== ''
+        ? tags.split(',').map(t => t.trim())
+        : [],
+      imageUrl: undefined, // leave image unchanged
+    });
+
+    if (!updatedLink) {
       return res.status(404).json({
-        message: 'Link not found.'
+        message: 'Link not found.',
       });
     }
 
-    const [rows] = await pool.query(
-      `
-      SELECT id, user_id, title, url, notes, tags, image_path, created_at, updated_at
-      FROM links
-      WHERE id = ?
-      `,
-      [linkId]
-    );
-
-    res.json(rows[0]);
+    res.json(updatedLink);
   } catch (error) {
-    console.error('Failed to update link:', error);
+    console.error('Failed to update link (Mongo):', error);
     res.status(500).json({
       message: 'Failed to update link.',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -279,30 +252,25 @@ app.put('/api/links/:id', requireLogin, async (req, res) => {
 // Delete route to remove a link
 app.delete('/api/links/:id', requireLogin, async (req, res) => {
   try {
-    const linkId = Number(req.params.id);
+    const linkId = req.params.id;
+    const userId = req.session.user.id;
 
-    const [result] = await pool.query(
-      `
-      DELETE FROM links
-      WHERE id = ? AND user_id = ?
-      `,
-      [linkId, req.session.user.id]
-    );
+    const deleted = await deleteLink(linkId, userId);
 
-    if (result.affectedRows === 0) {
+    if (!deleted) {
       return res.status(404).json({
-        message: 'Link not found.'
+        message: 'Link not found.',
       });
     }
 
     res.json({
-      message: 'Link deleted successfully.'
+      message: 'Link deleted successfully.',
     });
   } catch (error) {
-    console.error('Failed to delete link:', error);
+    console.error('Failed to delete link (Mongo):', error);
     res.status(500).json({
       message: 'Failed to delete link.',
-      error: error.message
+      error: error.message,
     });
   }
 });

@@ -36,18 +36,26 @@ function App() {
   ----------------------------------------------------------------------------------------------------
   --------------------------------------------------------------------------------------------------*/
 
-  // Function to filter links based on the tag filter input.
-  const [tagFilter, setTagFilter] = useState('');
+// Function to filter links based on the tag filter input.
+const [tagFilter, setTagFilter] = useState('');
 
-  const filteredLinks = links.filter((link) => {
-    if (!tagFilter.trim()) {
-      return true;
-    }
+const filteredLinks = links.filter((link) => {
+  const filter = tagFilter.trim().toLowerCase();
+  if (!filter) {
+    return true;
+  }
 
-    return (link.tags || '')
-      .toLowerCase()
-      .includes(tagFilter.toLowerCase());
-  });
+  // Normalize tags to a string, handling string/array/undefined
+  let tagsString = '';
+
+  if (Array.isArray(link.tags)) {
+    tagsString = link.tags.join(', ');
+  } else if (typeof link.tags === 'string') {
+    tagsString = link.tags;
+  }
+
+  return tagsString.toLowerCase().includes(filter);
+});
 
   // Function to load session and links data from the backend.
   const loadSessionAndLinks = async () => {
